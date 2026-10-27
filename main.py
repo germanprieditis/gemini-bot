@@ -1,15 +1,14 @@
 import os
 from flask import Flask, request, jsonify
-import google.generativeai as genai
+from google import genai
 
 app = Flask(__name__)
 
-# СЮДА ВСТАВЬТЕ ВАШ КЛЮЧ ИЗ ШАГА 1 (внутри кавычек)
+# Твой ключ уже внутри кода
 GEMINI_API_KEY = "AQ.Ab8RN6KOz5izFPijiDuEMy53Z0EWXwkJuyv8Qlm7AoOuklvA8w"
 
-# Настройка нейросети
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+# Настройка новой библиотеки Google
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -61,11 +60,14 @@ def webhook():
             }
         })
 
-    # 4. Отправка обычных вопросов в Gemini с инструкцией по эмоциям
+    # 4. Отправка вопросов в Gemini 1.5 через обновленный метод
     prompt = f"Ты — продвинутый голосовой ассистент с эмоциями. Ответь на запрос пользователя на русском языке: '{user_text}'. Если твой ответ веселый или смешной, начни его строго со слова [РАДОСТЬ]. Если ты рассказываешь секрет, тайну или что-то таинственное — начни со слова [ШЕПОТ]."
     
     try:
-        gemini_response = model.generate_content(prompt)
+        gemini_response = client.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=prompt
+        )
         raw_reply = gemini_response.text
     except Exception as e:
         raw_reply = "Извини, произошла ошибка при обращении к моему ИИ-мозгу."
@@ -93,3 +95,4 @@ def webhook():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+
